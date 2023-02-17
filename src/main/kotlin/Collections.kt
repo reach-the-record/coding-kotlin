@@ -1,3 +1,5 @@
+import java.lang.IllegalArgumentException
+
 /**
  * 컬렉션
  * Kotlin 컬렉션은 Java와 비슷하게 만들 수 있다.
@@ -6,12 +8,12 @@
  *
  */
 class Collections {
+
 }
 
 fun main(args: Array<String>) {
     val set = hashSetOf(1, 2, 3, 4, 5)
     val list = arrayListOf(1, 2, 3, 4, 5)
-    val map = hashMapOf(1 to "one", 2 to "two", 3 to "three", 4 to "four", 5 to "five")
 
     val strings = listOf("first", "second", "third", "fourth", "fifth")
     println(strings.last()) //가장 마지막 element 추출
@@ -62,6 +64,7 @@ fun main(args: Array<String>) {
     /**
      * 확장 함수를 사용하기 위해서는 그 함수를 다른 클래스나 함수와 마찬가지로 임포트해야 한다.
      * 확장 함수를 임포트 없이 사용한다면 동일한 이름의 확장 함수와 충돌할 수도 있기 때문에 임포트로 어떤 확장함수인지 명시해 주어야 한다.
+     * 클래스를 확장한 함수와 그 클래스의 멤버 함수의 이름과 시그니처가 같다면 멤버 함수가 호출된다(멤버 함수의 우선순위가 더 높다).
      */
     /*
     import class명.lastChar // 명시적으로 사용
@@ -95,6 +98,139 @@ fun main(args: Array<String>) {
     val sb = StringBuilder("Kotlin?")
     sb.lastChar = '!'
     println(sb)
+
+    val varargsList = listOf("one", "two", "three")
+    /**
+     * 이미 배열에 들어있는 가변 길이 인자로 넘길 때
+     * 자바에서는 배열을 넘기면 되지만 Kotlin에서는 배열을 명시적으로 풀어서 배열의 각 원소가 인자로 전달되도록 해야한다.
+     * Spread 연산자로 처리
+     */
+    val argsList = listOf("args = ", *args)
+
+    /**
+     * to는 Kotlin키워드가 아니고, 중위 호출이라는 특별한 방식으로 to라는 일반 메소드를 호출한 것.
+     * 중위 호출 시에는 수신 객체와 유일한 메소드 인자 사이에 메소드 이름을 넣는다.
+     */
+    val map = hashMapOf(1 to "one", 2 to "two", 3 to "three", 4 to "four", 5 to "five")
+    1.to("one") //"to" 메소드를 일반적인 방식으로 호출함
+    1 to "one"  //"to" 메소드를 중위 호출 방식으로 호출함
+
+    /**
+     * 함수(메소드) 중위 호출 사용을 허용하고 싶으면 infix 변경자를 함수(메소드) 선언 앞에 추가한다.
+     * public infix fun <A, B> A.To(that: B): Pair<A, B> = Pair(this, that)
+     * 이런 기능을 구조분해선언이라고 한다.
+     * 구조 분해 선언은 Pair 인스턴스 외 다른 객체에도 적용 가능하다.
+     * key, value 두 변수를 맵의 원소를 사용해 초기화 가능
+     */
+
+    /**
+     * 문자열 나누기
+     * split으로 여러 구분 문자열 지정 가능하다.
+     * 정규식, 3중 따옴표로 묶은 문자열
+     * 정규식이 강력하기는 하지만 나중에 알아보기 힘든 경우가 많음.
+     * 정규식이 필요할 경우 코틀린 라이브러리를 사용하면 편하다.
+     */
+
+    //String 확장 함수 사용
+    fun parsePath(path: String) {
+        val directory = path.substringBeforeLast("/")
+        val fullName = path.substringAfterLast("/")
+
+        val fileName = fullName.substringBeforeLast(".")
+        val extension = fullName.substringAfterLast(".")
+
+        println("Dir: $directory, name: $fileName, ext: $extension")
+    }
+
+    //정규식 사용
+    fun parsePathReg(path: String) {
+        val regex = """(.+)/(.+)\\.(.+)""".toRegex()    //3중 따옴표 문자열에서는 '\'를 포함한 어떤 문자도 이스케이프 할 팔요 없다.
+        val matchResult = regex.matchEntire(path)   //정규식 매치
+        if (matchResult != null) {
+            val (directory, filename, extension) = matchResult.destructured // 매치에 성공하면 그룹별로 분해한 매치 결과 (destructured) 프로퍼티를 각 변수에 대입한다.
+            println("Dir: $directory, name: $filename, ext: $extension")
+        }
+    }
+
+    /**
+     * 로컬 함수, 확장으로 코드 다듬기
+     * 같은 코드 반복을 피하기 위해 메소드 추출 리팩토링 -> 재사용은 가능하나, 클래스 안에 작은 메소드가 많아지고, 메소드 간 관계 파악이 힘들어 가독성 낮아질 수 있음.
+     * 리팩토링하여 내부 클래스에 넣으면 코드를 깔끔하게 조직할 수는 있으나, 불필요한 준비 코드가 늘어남.
+     *
+     * Kotlin에서는 함수에서 추출한 함수를 원 함수 내부에 중첩시킬 수 있어서 깔끔하게 코드 조직이 가능하다.
+     */
+    fun savePersonProto(person: Person) {
+        //필요한 검증을 그대로 나열, 여러 필드를 검증할 경우 하나씩 처리하는 코드가 중복.
+        if (person.name.isEmpty()) {
+            throw IllegalArgumentException(
+                "Can't save person ${person.name}: empty Name"
+            )
+        }
+        if (person.address.isEmpty()) {
+            throw IllegalArgumentException(
+                "Can't save person ${person.name}: empty Address"
+            )
+        }
+    }
+
+    /**
+     * 중복 검증 로직은 제거했고 추가적으로 다른 필드 검증도 쉽게 추가 가능하게 변경.
+     * person 객체를 validate 로컬 함수에 매번 전달하는 부분은 Kotlin에서 필요 없음.
+     * Kotlin의 로컬함수는 자신이 속한 바깥 함수의 모든 파라미터와 변수를 사용할 수 있음.
+     */
+    fun savePersonFix(person: Person) {
+        fun validate(person: Person,
+                     value: String,
+                     fieldName: String) {
+            if (value.isEmpty()) {
+                throw IllegalArgumentException(
+                    "Can't save person ${person.name}: empty $fieldName"
+                )
+            }
+        }
+
+        validate(person, person.name, "Name")
+        validate(person, person.address, "Address")
+    }
+
+    /**
+     * 위 함수와 같은 내용으로 처리하나 바깥 함수의 변수와 파라미터를 모두 사용할 수 있기 때문에 validate 함수에서 person 생략
+     */
+    fun savePersonFixTwo(person: Person) {
+        fun validate(value: String,
+                     fieldName: String) {
+            if (value.isEmpty()) {
+                throw IllegalArgumentException(
+                    "Can't save person ${person.name}: empty $fieldName"
+                )
+            }
+        }
+
+        validate(person.name, "Name")
+        validate(person.address, "Address")
+    }
+
+    /**
+     * 더 깔끔하게 개선하려면 Person클래스를 확장한 함수로 만들기도 가능
+     */
+    fun Person.validateBeforeSave() {
+        fun validate(value: String,
+                     fieldName: String) {
+            if (value.isEmpty()) {
+                throw IllegalArgumentException(
+                    "Can't save person $name: empty $fieldName"
+                )
+            }
+        }
+        validate(name, "Name")
+        validate(address, "Address")
+    }
+
+    //이런 식으로 로컬 함수를 써서 코드를 더 깔끔하게 유지하면서 중복을 제거할 수 있다.
+    fun savePerson(person: Person) {
+        person.validateBeforeSave()
+    }
+
 }
 
 var StringBuilder.lastChar: Char
@@ -103,3 +239,10 @@ var StringBuilder.lastChar: Char
         this.setCharAt(length - 1, value)
     }
 
+/**
+ * 컬렉션 처리
+ * 가변 길이 인자(varargs)는 메소드를 호출할 때 원하는 개수만큼 값을 인자로 넘기면 컴파일러가 배열에 값들을 넣어주는 기능이다.
+ * Kotlin에서는 자바와 비슷하나 문법이 조금 다르다. 타입 뒤에 ... 대신 vararg 변경자를 붙인다.
+ */
+
+public fun <T> listOf(vararg elements: T): List<T> = if (elements.size > 0) elements.asList() else emptyList()

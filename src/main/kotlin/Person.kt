@@ -7,7 +7,8 @@
  */
 data class Person(
     val name: String,
-    val age: Int? = null    //null이 될 수 있는 타입 / parameter default value
+    val age: Int? = null,    //null이 될 수 있는 타입 / parameter default value
+    val address: String
 )
 
 /**
