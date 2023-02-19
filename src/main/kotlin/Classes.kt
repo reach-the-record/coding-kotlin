@@ -155,5 +155,106 @@ fun eval2(e: SealedExpr): Int =
         is SealedExpr.Sum -> eval2(e.left) + eval2(e.right)
     }
 /**
- * 
+ * Kotlin은 주 생성자와 부 생성자를 구분하며, 초기화 블록을 통해 초기화 로직을 추가할 수 있다.
  */
+class UserProto constructor(_nickname: String) { //파라미터가 하나만 있는 주 생성자
+    /*
+    초기화 블록은 주 생성자와 함께 사용된다.
+    주 생성자는 제한적이기 때문에 별도의 코드를 포함할 수 없으므로 초기화 블록이 필요하다.
+    필요하다면 클래스 안에 여러 초기화 블록을 선언할 수 있다.
+     */
+    val nickname: String
+
+    init {  //초기화 블록
+        nickname = _nickname
+    }
+}
+
+interface User {
+    val email: String
+    val nickName: String
+        get() = email.substringBefore('@') // 프로퍼티에 뒷받침하는 필드가 없다. 대신 매번 결과를 계산해 돌려준다.
+}
+
+/**
+ * Getter와 Setter에서 필드 접근
+ * 프로퍼티에 저장된 값의 변경 이력을 로그에 남기려는 경우를 생각해보자.
+ * 그런 경우 변경 가능한 프로퍼티를 정의하되 세터에서 프로퍼티 값을 바꿀 때마다 약간의 코드를 추가로 실행해야 한다.
+ */
+class User2(val name: String) {
+    var address: String = "unspecified"
+        set(value: String) {
+            println("""
+                Address was changed for $name:
+                "$field" -> "$value".""".trimIndent())
+            field = value
+        }
+}
+
+/**
+ * 접근자의 가시성 변경
+ * 접근자의 가시성은 기본적으로 프로퍼티의 가시성과 같다.
+ * 필요에 따라 get이나 set 앞에 가시성 변경자를 추가해서 접근자의 가시성을 변경이 가능하다.
+ */
+class LengthCounter {
+    var counter: Int = 0
+        private set // 이 클래스 밖에서 이 프로퍼티의 값을 바꿀 수 없다.
+
+    fun addWord(word: String) {
+        counter += word.length
+    }
+}
+
+/**
+ * 컴파일러가 생성한 메소드: 데이터 클래스와 메소드 위임
+ * Java에서는 클래스가 equals, hashCode, toString 등의 메소드를 구현해야 함.
+ * Kotlin에서는 컴파일러가 기계적으로 생성하는 작업을 자동으로 한다.
+ * 소스코드를 깔끔하게 유지할 수 있다.
+ */
+
+/**
+ * 클래스가 데이터를 저장하는 역할만 수행할 경우 toString, equals, hashCode를 반드시 오버라이드 해야 한다.
+ * IDE는 자동으로 메소드를 정의해주고 작성된 메소드의 정확성, 일관성을 검사해준다.
+ * Kotlin은 data 변경자를 클래스 앞에 붙이면 필요한 메소드를 컴파일러가 알아서 만들어 준다.
+ * --- 자동 생성 ---
+ * 인스턴스 간 비교를 위한 euqals
+ * HashMap과 같은 해시 기반 컨테이너에서 키로 사용할 수 있는 hashCode
+ * 클래스의 각 필드를 각 순서대로 표시하는 문자열 표현을 만들어주는 toString
+ */
+data class Client(val name: String, val postalCode: Int)
+
+/**
+ * copy() 메소드
+ * data class의 경우 불변 클래스로 만드는 것을 권장한다.
+ * HashMap 등의 컨테이너에 데이터 클래스 객체를 담는 경우엔 불변성은 필수적이다.
+ * copy() 메소드로 객체를 복사하면서 일부 프로퍼티를 바꿀 수 있다.
+ * 복사본은 원본과 다른 생명주기를 가지며, 복사를하면서 일부 프로퍼티 값을 바꾸거나 복사본을 제거해도
+ * 프로그램에서 원본을 참조하는 다른 부분에 전혀 영향을 끼치지 않는다.
+ */
+
+/**
+ * 클래스 위임: by 키워드 사용
+ * 데코레이터 패턴 : 상속을 허용하지 않는 클래스에 새로운 동작을 추가해야 할 때 사용하는 일반적인 방법.
+ * 핵심은 상속을 허용하지 않는 클래스 대신 사용할 수 있는 새로운 클래스를 만들되 기존 클래스와 같은 인터페이스를
+ * 데코레이터가 제공하게 만들고, 기존 클래스를 데코레이터 내부에 필드로 유지하는 것.
+ * 이런 접근 방법의 단점은 준비 코드가 상당히 많이 필요하다는 점이다.
+ * 코틀린에서는 인터페이스를 구현할 때 by 키워드를 통해 그 인터페이스에 대한 구현을 다른 객체에 위임 중이라는 사실을 명시할 수있다.
+ */
+class CountingSet<T>(
+    val innerSet: MutableCollection<T> = HashSet<T>()
+) : MutableCollection<T> by innerSet {
+
+    var objectsAdded = 0
+
+    //add와 addAll을 오버라이드해서 카운터를 증가시키고, MutableCollection 인터페이스의 나머지 메소드는 내부 컨테이너(innerSet)에게 위임한다.
+    override fun add(element: T): Boolean {
+        objectsAdded++
+        return innerSet.add(element)
+    }
+
+    override fun addAll(c: Collection<T>): Boolean {
+        objectsAdded += c.size
+        return innerSet.addAll(c)
+    }
+}
+
