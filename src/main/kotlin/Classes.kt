@@ -1,3 +1,6 @@
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import java.io.File
 import java.io.Serializable
 import java.lang.IllegalArgumentException
 
@@ -258,3 +261,78 @@ class CountingSet<T>(
     }
 }
 
+/**
+ * Java - 클래스 생성자를 private으로 제한하고 정적 필드에 객체를 저장하는 Singleton 방식으로 구현
+ * Kotlin - 객체 선언 기능을 통해 Singleton을 언엇에서 기본 지원
+ * 객체 선언 - 클래스 선언과 클래스에 속한 단일 인스턴스 선언을 합친 선언
+ * 객체 선언도 클래스나 인터페이스를 상속할 수 있다.
+ * 프레임워크를 사용하기 위해 특정 인터페이스를 구현해야 하는데,
+ * 구현 내부에 다른 상태가 필요하지 않은 경우에 이런 기능이 유용하다.
+ */
+object CaseInsensitiveFileComparator : Comparator<File> {
+    override fun compare(file1: File, file2: File): Int {
+        return file1.path.compareTo(file2.path,
+            ignoreCase = true)
+    }
+}
+
+fun main2(args: Array<String>) {
+    println(CaseInsensitiveFileComparator.compare(
+        File("/User"), File("/user")))
+    val files = listOf(File("/Z"), File("/a"))
+    println(files.sortedWith(CaseInsensitiveFileComparator))
+}
+
+/**
+ * Singleton 패턴과 DI(Dependency Injection)
+ * Singleton 패턴과 마찬가지 이유로 대규모 소프트웨어 시스템에서는 객체 선언이 항상 적합하지는 않다.
+ * 객체 생성을 제어할 방법이 없고 생성자 파라미터를 지정할 수 없어서다.
+ * 이는 단위 테스트를 하거나 소프트웨어 시스템의 설정이 달라질 때 객체를 대체하거나 객체의 의존관계를 바꿀 수 없다.
+ * 그런 기능이 필요하다면 Java와 마찬가지로 DI 프레임워크와 코틀린 클래스를 함께 사용해야 한다.
+ */
+data class Man(val name: String) {
+    object NameComparator : Comparator<Man> {   //클래스 안에서 객체를 선언해도 인스턴스는 하나뿐이다.
+        override fun compare(p1: Man, p2: Man): Int =
+            p1.name.compareTo(p2.name)
+    }
+}
+
+fun main3(args: Array<String>) {
+    val men = listOf(Man("Bob"), Man("Alice"))
+    println(men.sortedWith(Man.NameComparator))
+}
+
+/**
+ * 동반 객체: 팩토리 메소드와 정적 멤버가 들어갈 장소
+ * Kotlin 클래스 내에는 정적인 멤버가 없음. - Kotlin은 Java static 키워드를 지원하지 않는다.
+ * Kotlin에서는 패키지 수준의 최상위 함수와 객체 선언을 활용할 수 있다.
+ * 클래스 안에 정의된 객체 중 하나에 companion을 붙이면 그 클래스의 동반 객체로 만들 수 있다.
+ * 동반 객체의 프로퍼티나 메소드에 접근하려면 그 동반 객체가 정의된 클래스 이름을 사용한다.
+ */
+class A {
+    companion object {
+        fun bar() {
+            println("Companion object called")
+        }
+    }
+}
+
+/**
+ * 동반 객체 - private 생성자를 호출하기 좋은 위치.
+ * 동반 객체는 자신을 둘러싼 클래스의 모든 private 멤버에 접근할 수 있다.
+ * 동반 객체는 클래스 안에 정의된 일반 객체라서 동반 객체에 이름을 붙이거나,
+ * 동반 객체가 인터페이스를 상속하거나, 동반 객체 안에 확장 함수와 프로퍼티를 정의할 수 있다.
+ * 특별히 이름을 지정하지 않으면 동반 객체 이름은 자동으로 Companion이 된다.
+ * 동반 객체도 다른 객체 선언과 마찬가지로 인터페이스 구현 가능.
+ */
+class User3 private constructor(val nickname: String) {
+    companion object {
+        fun newSubscribingUser(email: String) =
+            User3(email.substringBefore('@'))
+    }
+}
+
+fun main4(args: Array<String>) {
+    val subscribingUser = User3.newSubscribingUser("bob@gmail.com")
+    println(subscribingUser.nickname)
+}
