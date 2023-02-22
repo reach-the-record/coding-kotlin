@@ -276,7 +276,7 @@ object CaseInsensitiveFileComparator : Comparator<File> {
     }
 }
 
-fun main2(args: Array<String>) {
+fun main12(args: Array<String>) {
     println(CaseInsensitiveFileComparator.compare(
         File("/User"), File("/user")))
     val files = listOf(File("/Z"), File("/a"))
@@ -290,16 +290,16 @@ fun main2(args: Array<String>) {
  * 이는 단위 테스트를 하거나 소프트웨어 시스템의 설정이 달라질 때 객체를 대체하거나 객체의 의존관계를 바꿀 수 없다.
  * 그런 기능이 필요하다면 Java와 마찬가지로 DI 프레임워크와 코틀린 클래스를 함께 사용해야 한다.
  */
-data class Man(val name: String) {
-    object NameComparator : Comparator<Man> {   //클래스 안에서 객체를 선언해도 인스턴스는 하나뿐이다.
-        override fun compare(p1: Man, p2: Man): Int =
+data class Man2(val name: String) {
+    object NameComparator : Comparator<Man2> {   //클래스 안에서 객체를 선언해도 인스턴스는 하나뿐이다.
+        override fun compare(p1: Man2, p2: Man2): Int =
             p1.name.compareTo(p2.name)
     }
 }
 
-fun main3(args: Array<String>) {
-    val men = listOf(Man("Bob"), Man("Alice"))
-    println(men.sortedWith(Man.NameComparator))
+fun main13(args: Array<String>) {
+    val men = listOf(Man2("Bob"), Man2("Alice"))
+    println(men.sortedWith(Man2.NameComparator))
 }
 
 /**
@@ -332,7 +332,7 @@ class User3 private constructor(val nickname: String) {
     }
 }
 
-fun main4(args: Array<String>) {
+fun main14(args: Array<String>) {
     val subscribingUser = User3.newSubscribingUser("bob@gmail.com")
     println(subscribingUser.nickname)
 }
