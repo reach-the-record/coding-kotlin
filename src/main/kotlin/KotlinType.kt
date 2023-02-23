@@ -139,3 +139,51 @@ class MyTest {
         myService.performAction() // 널 검사를 수행하지 않고 프로퍼티를 사용한다.
     }
 }
+
+/**
+ * Kotlin 원시 타입
+ * 원시타입 - 변수에 해당 값이 직접 들어감, 참조타입 - 변수에 해당 값을 참조하는 메모리 상 객체 위치가 들어감.
+ * Kotlin은 참조 타입이 필요한 경우 특별한 래퍼 타입으로 원시 타입을 감싸서 사용.
+ * 원시 타입과 래퍼 타입을 구분하지 않아 항상 같은 타입을 사용.
+ *
+ * 원시타입
+ * 정수 타입 : Byte, Short, Int, Long
+ * 부동소수점 수 타입 : Float, Double
+ * 문자 타입 : Char
+ * 불린 타입 : Boolean
+ */
+fun showProgress(progress: Int) {
+    val percent = progress.coerceIn(0, 100)
+    println("We're ${percent}% done!")
+}
+
+/**
+ * null 참조를 자바의 참조 타입의 변수에만 대입할 수 있기 때문에 null이 될 수 있는 코틀린 타입은 자바 원시 타입으로 표현할 수 없다.
+ * Kotlin에서 널이 될 수 있는 원시 타입을 사용하면 그 타입은 Java의 래퍼 타입으로 컴파일된다.
+ */
+data class Person3(val name: String,
+                  val age: Int? = null) {   //선언된 age 프로퍼티의 값은 Integer로 저장된다. Kotlin에서 적절한 타입을 찾으려면 그 변수나 프로퍼티에 Null이 들어갈 수 있는지만 고민하면 된다.
+
+    fun isOlderThan(other: Person3): Boolean? {
+        if (age == null || other.age == null)
+            return null
+        return age > other.age
+    }
+}
+
+fun main24(args: Array<String>) {
+    println(Person3("Sam", 35).isOlderThan(Person3("Amy", 42)))
+    println(Person3("Sam", 35).isOlderThan(Person3("Jane")))
+/**
+ * 숫자 변환
+ * Kotlin은 한 타입의 숫자를 다른 타입의 숫자로 자동 변환하지 않는다.
+ * 결과 타입이 허용하는 숫자의 범위가 원래 타입의 범위보다 넓은 경우 조차도 자동 변환은 불가능하다.
+ * Kotlin에서 모든 원시 타입에 대한 변환 함수를 제공하므로 직접 변환해야 한다.
+ * ex) toByte(), toShort(), toChar(), toLong(), toInt()
+ */
+    val i = 1
+//    val l: Long = i // "Error: type mismatch" 컴파일 오류 발생
+    val l2: Long = i.toLong()
+
+
+}
