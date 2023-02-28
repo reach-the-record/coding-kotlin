@@ -147,3 +147,74 @@ fun main64(args: Array<String>) {
     println(log.averageDurationFor {
         it.os == OS.IOS && it.path == "/signup" })
 }
+
+/**
+ * 고차 함수 안에서 흐름 제어
+ * 람다 안의 return문: 람다를 둘러싼 함수로부터 반환
+ */
+val people = kotlin.collections.listOf(Person("Alice", 29), Person("Bob", 31))
+
+/**
+ * 실행 결과를 보면 이름이 Alice인 경우에 lookForAlice 함수로부터 반환된다는 사실을 분명히 알 수 있다.
+ */
+fun lookForAlice(people: List<Person>) {
+    for (person in people) {
+        if (person.name == "Alice") {
+            println("Found!")
+            return
+        }
+    }
+    println("Alice is not found")
+}
+
+/**
+ * 람다 안에서 return을 사용하면 람다로부터만 반환되는 게 아니라 그 람다를 호출하는 함수가 실행을 끝내고 반환된다.
+ * 그렇게 자신을 둘러싸고 있는 블록보다 더 바깥에 있는 다른 블록을 반환하게 만드는 return 문을 넌로컬(non-local) return이라 부른다.
+ * 이렇게 return이 바깥쪽 함수를 반환시킬 수 있는 때는 람다를 인자로 받는 함수가 인라인 함수인 경우뿐이다.
+ * 예제에서 forEach는 인라인 함수이므로 람다 본문과 함께 인라이닝된다.
+ * 따라서 return 식이 바깥쪽 함수(여기서는 lookForAlice)를 반환시키도록 쉽게 컴파일할 수 있다.
+ */
+fun lookForAlice2(people: List<Person>) {
+    people.forEach {
+        if (it.name == "Alice") {
+            println("Found!")
+            return
+        }
+    }
+    println("Alice is not found")
+}
+
+/**
+ * 람다 식에서도 로컬 return을 사용할 수 있다.
+ * 람다 안에서 로컬 return은 for루프의 break와 비슷한 역할을 한다.
+ * 로컬 return과 넌로컬 return을 구분하기 위해 레이블(label)을 사용해야 한다.
+ */
+fun lookForAlice3(people: List<Person>) {
+    people.forEach label@{
+        if (it.name == "Alice") return@label
+    }
+    println("Alice might be somewhere")
+}
+
+/**
+ * 람다에 레이블을 붙여서 사용하는 대신 람다를 인자로 받는 인라인 함수의 이름을 return 뒤에 레이블로 사용해도 된다.
+ */
+fun lookForAlice4(people: List<Person>) {
+    people.forEach {
+        if (it.name == "Alice") return@forEach
+    }
+    println("Alice might be somewhere")
+}
+
+/**
+ * 무명 함수 - 기본적으로 로컬 return
+ * 무명 함수는 코드 블록을 함수에 넘길 때 사용할 수 있는 다른 방법이다.
+ * 무명 함수는 일반 함수와 비슷하나 차이는 함수 이름이나 파라미터 타입을 생략할 수 있다는 점 뿐이다.
+ */
+fun lookForAlice5(people: List<Person>) {
+    people.forEach(fun (person) {
+        if (person.name == "Alice") return
+        println("${person.name} is not Alice")
+    })
+}
+
