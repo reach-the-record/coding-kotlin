@@ -327,7 +327,7 @@ fun main29(args: Array<String>) {
     val squares = IntArray(5) { i -> (i+1) * (i+1) }
     println(squares.joinToString())
 }
-fun main30(args: Array<String>) {
+fun mains30(args: Array<String>) {
     args.forEachIndexed { index, element ->
         println("Argument $index is: $element")
     }
